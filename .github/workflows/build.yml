@@ -15,10 +15,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@latest
+        uses: actions/checkout@v4
 
       - name: Use Node.js 18
-        uses: actions/setup-node@latest
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
@@ -32,12 +32,12 @@ jobs:
           NODE_ENV: production
 
       - name: Configure GitHub Pages
-        uses: actions/configure-pages@latest
+        uses: actions/configure-pages@v3
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@latest
+        uses: actions/upload-pages-artifact@v1
         with:
           path: ./dist
 
       - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@latest
+        uses: actions/deploy-pages@v1
