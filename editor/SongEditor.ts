@@ -115,7 +115,8 @@ class Slider {
 		// touching the slider. This code prevents the initial slider change and
 		// reimplements it if the pointer will not scroll.
 		input.style.pointerEvents = "none";
-		this.container = span(input, {style: "touch-action: pan-y; display: flex;"});
+		this.container = span(input, {style: "touch-action: pan-y; display: flex; cursor: pointer;"});
+		this.container.title = input.title;
 		new EasyPointers(this.container);
 		this.container.addEventListener("pointerdown", this._onPointerDown);
 		this.container.addEventListener("pointermove", this._onPointerMove);
@@ -996,7 +997,7 @@ export class SongEditor {
 			}
 			if (instrument.type == InstrumentType.pwm || instrument.type == InstrumentType.supersaw) {
 				this._pulseWidthRow.style.display = "";
-				this._pulseWidthSlider.input.title = prettyNumber(getPulseWidthRatio(instrument.pulseWidth) * 100) + "%";
+				this._pulseWidthSlider.container.title = prettyNumber(getPulseWidthRatio(instrument.pulseWidth) * 100) + "%";
 				this._pulseWidthSlider.updateValue(instrument.pulseWidth);
 			} else {
 				this._pulseWidthRow.style.display = "none";
@@ -1019,7 +1020,7 @@ export class SongEditor {
 			if (effectsIncludePitchShift(instrument.effects)) {
 				this._pitchShiftRow.style.display = "";
 				this._pitchShiftSlider.updateValue(instrument.pitchShift);
-				this._pitchShiftSlider.input.title = (instrument.pitchShift - Config.pitchShiftCenter) + " semitone(s)";
+				this._pitchShiftSlider.container.title = (instrument.pitchShift - Config.pitchShiftCenter) + " semitone(s)";
 				for (const marker of this._pitchShiftFifthMarkers) {
 					marker.style.display = prefs.showFifth ? "" : "none";
 				}
@@ -1030,7 +1031,7 @@ export class SongEditor {
 			if (effectsIncludeDetune(instrument.effects)) {
 				this._detuneRow.style.display = "";
 				this._detuneSlider.updateValue(instrument.detune);
-				this._detuneSlider.input.title = (Synth.detuneToCents(instrument.detune - Config.detuneCenter)) + " cent(s)";
+				this._detuneSlider.container.title = (Synth.detuneToCents(instrument.detune - Config.detuneCenter)) + " cent(s)";
 			} else {
 				this._detuneRow.style.display = "none";
 			}
@@ -1085,7 +1086,7 @@ export class SongEditor {
 				this._echoSustainSlider.updateValue(instrument.echoSustain);
 				this._echoDelayRow.style.display = "";
 				this._echoDelaySlider.updateValue(instrument.echoDelay);
-				this._echoDelaySlider.input.title = (Math.round((instrument.echoDelay + 1) * Config.echoDelayStepTicks / (Config.ticksPerPart * Config.partsPerBeat) * 1000) / 1000) + " beat(s)";
+				this._echoDelaySlider.container.title = (Math.round((instrument.echoDelay + 1) * Config.echoDelayStepTicks / (Config.ticksPerPart * Config.partsPerBeat) * 1000) / 1000) + " beat(s)";
 			} else {
 				this._echoSustainRow.style.display = "none";
 				this._echoDelayRow.style.display = "none";
@@ -1966,7 +1967,17 @@ export class SongEditor {
 				(<any>navigator).share({ url: new URL("#" + this.doc.song.toBase64String(), location.href).href });
 				break;
 			case "shortenUrl":
-				window.open("https://tinyurl.com/api-create.php?url=" + encodeURIComponent(new URL("#" + this.doc.song.toBase64String(), location.href).href));
+				const songUrl: string = new URL("#" + this.doc.song.toBase64String(), location.href).href;
+				if (songUrl.length <= 5000) {
+					// is.gd supports URLs up to 5000 characters.
+					window.open("https://is.gd/create.php?url=" + encodeURIComponent(songUrl));
+				} else if (songUrl.length <= 15000) {
+					// tinyurl supports URLs up to 15000 characters. However, this API is deprecated,
+					// and their other API's free tier only allows 100 shortened links per month. :(
+					window.open("https://tinyurl.com/api-create.php?url=" + encodeURIComponent(songUrl));
+				} else {
+					window.alert("Sorry, it looks like this song's URL is too long. The URL shortener service only supports URLs up to 15000 characters, and your song's URL is " + songUrl.length + " characters long. Try https://pastelink.net/ instead?");
+				}
 				break;
 			case "viewPlayer":
 				location.href = "player/#song=" + this.doc.song.toBase64String();
